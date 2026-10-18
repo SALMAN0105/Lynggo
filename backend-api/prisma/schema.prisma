@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Pengguna {
+  id                   Int       @id @default(autoincrement())
+  nama                 String
+  email                String    @unique
+  kata_sandi           String
+  poin_pengalaman      Int       @default(0)
+  runtutan_hari        Int       @default(0)
+  nyawa_harian         Int       @default(3) // Tambahan buat gamifikasi
+  tgl_belajar_terakhir DateTime?
+  
+  // Relasi ke tabel progres
+  progres_hafalan      ProgresHafalan[]
+}
+
+model Kursus {
+  id          Int         @id @default(autoincrement())
+  nama        String      // Contoh: "Inggris", "Mandarin"
+  kode_bahasa String      // Contoh: "en", "zh"
+  
+  // Relasi ke tabel pelajaran
+  pelajaran   Pelajaran[]
+}
+
+model Pelajaran {
+  id        Int        @id @default(autoincrement())
+  kursus_id Int
+  tingkat   Int        // Level 1 untuk pemula, dst
+  judul     String     // "Perkenalan", "Angka", dll
+  
+  // Penentu relasi
+  kursus    Kursus     @relation(fields: [kursus_id], references: [id])
+  kosakata  Kosakata[]
+}
+
+model Kosakata {
+  id           Int        @id @default(autoincrement())
+  pelajaran_id Int
+  kata         String     // Kata asli atau Hanzi
+  pinyin       String?    // Boleh kosong buat bahasa Inggris
+  arti         String
+  url_audio    String?    
+  
+  // Penentu relasi
+  pelajaran    Pelajaran  @relation(fields: [pelajaran_id], references: [id])
+  progres      ProgresHafalan[]
+}
+
+model ProgresHafalan {
+  id                Int       @id @default(autoincrement())
+  pengguna_id       Int
+  kosakata_id       Int
+  jeda_hari         Int       @default(0)
+  tinjau_berikutnya DateTime
+  
+  // Penentu relasi
+  pengguna          Pengguna  @relation(fields: [pengguna_id], references: [id])
+  kosakata          Kosakata  @relation(fields: [kosakata_id], references: [id])
+}
